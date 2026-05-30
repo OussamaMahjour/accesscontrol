@@ -27,38 +27,7 @@ A self-hosted, open-source **Zero Trust Network Access Control** system combinin
 
 ## Architecture overview
 
-```
-User device
-    │
-    ▼
-┌─────────────────────────────────────────────┐
-│  Layer 1 — Network admission (PacketFence)  │
-│  802.1X / captive portal · VLAN assignment  │
-└─────────────────┬───────────────────────────┘
-                  │ authenticated device
-                  ▼
-┌─────────────────────────────────────────────┐
-│  Layer 2 — Identity & SSO (Keycloak)        │
-│  OAuth2 / OIDC · MFA · JWT tokens           │
-└───────────┬─────────────────────┬───────────┘
-            │ JWT token           │ OIDC login
-            ▼                     ▼
-┌───────────────────┐   ┌─────────────────────┐
-│  Layer 3a — OPA   │   │  Layer 3b — Vault   │
-│  Rego policies    │   │  Dynamic SSH creds  │
-│  ABAC/RBAC        │◄──│  PKI · OTP leases   │
-└────────┬──────────┘   └──────────┬──────────┘
-         │ allow/deny              │ temp credential
-         └────────────┬────────────┘
-                      ▼
-┌─────────────────────────────────────────────┐
-│  Layer 4 — Remote access gateway            │
-│  Apache Guacamole — RDP · SSH · VNC         │
-│  Session recording · SSO via OIDC           │
-└──────────┬──────────┬──────────┬────────────┘
-           ▼          ▼          ▼
-      Linux VMs  Windows VMs  Web apps
-```
+![Architeture overview](./image.png)
 
 **Access decision chain:** Every connection request passes through all four layers. Removing a user from a Keycloak group instantly revokes Vault leases, OPA decisions, and Guacamole sessions.
 
