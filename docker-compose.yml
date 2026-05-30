@@ -203,7 +203,7 @@ services:
       OPENID_JWKS_ENDPOINT: http://192.168.2.89:8080/realms/corp/protocol/openid-connect/certs
       OPENID_ISSUER: http://192.168.2.89:8080/realms/corp
       OPENID_CLIENT_ID: guacamole
-      OPENID_REDIRECT_URI: http://192.168.2.89:8888/guacamole
+      OPENID_REDIRECT_URI: http://localhost:8888/guacamole
       OPENID_USERNAME_CLAIM_TYPE: preferred_username
       OPENID_GROUPS_CLAIM_TYPE: groups
       OPENID_SCOPE: openid email profile groups
