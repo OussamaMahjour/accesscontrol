@@ -130,34 +130,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # ─── Software Router (FRRouting) ─────────────────────────────────────────────
-  router:
-    image: frrouting/frr:latest
-    container_name: router
-    restart: unless-stopped
-    privileged: true
-    cap_add:
-      - NET_ADMIN
-      - SYS_ADMIN
-      - NET_RAW
-    sysctls:
-      - net.ipv4.ip_forward=1
-      - net.ipv6.conf.all.forwarding=1
-      - net.ipv4.conf.all.rp_filter=0
-    ports:
-      - "2601:2601"   # zebra
-      - "2604:2604"   # ospfd
-      - "2605:2605"   # bgpd
-    volumes:
-      - ./router/frr.conf:/etc/frr/frr.conf
-      - ./router/daemons:/etc/frr/daemons
-    networks:
-      infra-net:
-        ipv4_address: 172.20.0.254
-      lan:
-        ipv4_address: 192.168.10.1
-      wan:
-        ipv4_address: 10.0.0.1
+  
 
   # ─── Guacamole Schema Seeder (runs once) ─────────────────────────────────────
   # Copies the SQL schema files from the Guacamole image into the
