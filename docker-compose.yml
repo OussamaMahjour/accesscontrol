@@ -105,6 +105,24 @@ services:
       retries: 5
       start_period: 10s
 
+  # ─── Vault Init (runs once) ───────────────────────────────────────────────
+  vault-init:
+    image: hashicorp/vault:1.16
+    container_name: vault-init
+    restart: "no"
+    depends_on:
+      vault:
+        condition: service_healthy
+    environment:
+      VAULT_ADDR: "http://vault:8200"
+      VAULT_TOKEN: "dev-root-token"
+      VAULT_CLIENT_SECRET: ${VAULT_CLIENT_SECRET}
+    volumes:
+      - ./vault/init.sh:/init.sh:ro
+    entrypoint: ["sh", "/init.sh"]
+    networks:
+      infra-net:
+
   # ─── Open Policy Agent (OPA) ─────────────────────────────────────────────────
   opa:
     image: openpolicyagent/opa:latest
@@ -130,12 +148,6 @@ services:
       timeout: 5s
       retries: 5
 
-  
-
-  # ─── Guacamole Schema Seeder (runs once) ─────────────────────────────────────
-  # Copies the SQL schema files from the Guacamole image into the
-  # guacamole_schema named volume so postgres-guacamole can auto-initialize.
-  
   # ─── PostgreSQL for Guacamole ────────────────────────────────────────────────
   postgres-guacamole:
     image: postgres:15-alpine
@@ -147,10 +159,7 @@ services:
       POSTGRES_PASSWORD: guacamole_secret
     volumes:
       - guacamole_postgres_data:/var/lib/postgresql/data
-      - guacamole_schema:/docker-entrypoint-initdb.d:ro   # auto-init on first start
-    # depends_on:
-    #   guacamole-schema:
-    #     condition: service_completed_successfully
+      - guacamole_schema:/docker-entrypoint-initdb.d:ro
     networks:
       infra-net:
         ipv4_address: 172.20.0.15
@@ -170,8 +179,6 @@ services:
         ipv4_address: 172.20.0.20
 
   # ─── Guacamole Web UI ─────────────────────────────────────────────────────
-  # Access via http://localhost:8888/guacamole
-  # Default credentials: guacadmin / guacadmin (change immediately)
   guacamole:
     image: guacamole/guacamole:latest
     container_name: guacamole
@@ -190,16 +197,19 @@ services:
       POSTGRESQL_USER: guacamole
       POSTGRESQL_PASSWORD: guacamole_secret
       POSTGRESQL_ENABLED: "true"
-      # Keycloak SSO (OpenID Connect) — uncomment to enable
-      # OPENID_AUTHORIZATION_ENDPOINT: http://keycloak:8080/realms/master/protocol/openid-connect/auth
-      # OPENID_JWKS_ENDPOINT: http://keycloak:8080/realms/master/protocol/openid-connect/certs
-      # OPENID_ISSUER: http://keycloak:8080/realms/master
-      # OPENID_CLIENT_ID: guacamole
-      # OPENID_REDIRECT_URI: http://localhost:8888/guacamole
+      # Keycloak SSO (OpenID Connect)
+      OPENID_AUTHORIZATION_ENDPOINT: http://192.168.2.89:8080/realms/corp/protocol/openid-connect/auth
+      OPENID_JWKS_ENDPOINT: http://192.168.2.89:8080/realms/corp/protocol/openid-connect/certs
+      OPENID_ISSUER: http://192.168.2.89:8080/realms/corp
+      OPENID_CLIENT_ID: guacamole
+      OPENID_REDIRECT_URI: http://192.168.2.89:8888/guacamole
+      OPENID_USERNAME_CLAIM_TYPE: preferred_username
+      OPENID_GROUPS_CLAIM_TYPE: groups
+      OPENID_SCOPE: openid email profile groups
     ports:
       - "8888:8080"
     volumes:
-    - "guacamole_schema:/opt/guacamole/extensions/guacamole-auth-jdbc/postgresql/schema:ro"
+      - "guacamole_schema:/opt/guacamole/extensions/guacamole-auth-jdbc/postgresql/schema:ro"
     networks:
       infra-net:
         ipv4_address: 172.20.0.21
