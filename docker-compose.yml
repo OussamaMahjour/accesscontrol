@@ -191,6 +191,7 @@ services:
     environment:
       GUACD_HOSTNAME: guacd
       GUACD_PORT: 4822
+      EXTENSION_PRIORITY: openid, jdbc-postgresql
       POSTGRESQL_HOSTNAME: postgres-guacamole
       POSTGRESQL_PORT: 5432
       POSTGRESQL_DATABASE: guacamole
