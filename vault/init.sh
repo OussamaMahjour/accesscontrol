@@ -1,17 +1,12 @@
 #!/bin/sh
 # =============================================================================
 # JIADI — Vault initialization script
-# Runs once after Vault is healthy. Configures OIDC auth, SSH secrets engine,
-# and access policies.
+# Run with: docker exec -it vault sh /vault/init.sh
 # =============================================================================
 
 export VAULT_ADDR="http://127.0.0.1:8200"
 export VAULT_TOKEN="dev-root-token"
 
-echo ">>> Waiting for Vault to be ready..."
-until vault status > /dev/null 2>&1; do
-  sleep 2
-done
 echo ">>> Vault is ready."
 
 # =============================================================================
@@ -54,8 +49,7 @@ vault write ssh/roles/otp-role \
 # 3. POLICIES
 # =============================================================================
 echo ">>> Writing sysadmin policy..."
-vault policy write sysadmin - <<EOF
-# Full SSH access
+vault policy write sysadmin - <<POLICY
 path "ssh/creds/otp-role" {
   capabilities = ["create", "update"]
 }
@@ -65,29 +59,27 @@ path "ssh/roles/*" {
 path "secret/*" {
   capabilities = ["read", "list"]
 }
-EOF
+POLICY
 
 echo ">>> Writing devops policy..."
-vault policy write devops - <<EOF
-# SSH access only
+vault policy write devops - <<POLICY
 path "ssh/creds/otp-role" {
   capabilities = ["create", "update"]
 }
 path "ssh/roles/otp-role" {
   capabilities = ["read"]
 }
-EOF
+POLICY
 
 echo ">>> Writing readonly policy..."
-vault policy write readonly - <<EOF
-# Read-only access to secrets
+vault policy write readonly - <<POLICY
 path "secret/*" {
   capabilities = ["read", "list"]
 }
-EOF
+POLICY
 
 # =============================================================================
-# 4. GROUP → POLICY MAPPING (via Keycloak groups in JWT)
+# 4. GROUP → POLICY MAPPING
 # =============================================================================
 echo ">>> Creating identity groups..."
 
