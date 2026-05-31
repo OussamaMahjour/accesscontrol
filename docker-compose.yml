@@ -108,23 +108,7 @@ services:
       retries: 5
       start_period: 10s
 
-  # ─── Vault Init (runs once) ───────────────────────────────────────────────
-  vault-init:
-    image: hashicorp/vault:1.16
-    container_name: vault-init
-    restart: "no"
-    depends_on:
-      vault:
-        condition: service_healthy
-    environment:
-      VAULT_ADDR: "http://vault:8200"
-      VAULT_TOKEN: "dev-root-token"
-      VAULT_CLIENT_SECRET: ${VAULT_CLIENT_SECRET}
-    volumes:
-      - ./vault/init.sh:/init.sh:ro
-    entrypoint: ["sh", "/init.sh"]
-    networks:
-      infra-net:
+
 
   # ─── Open Policy Agent (OPA) ─────────────────────────────────────────────────
   opa:
